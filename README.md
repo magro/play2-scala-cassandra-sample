@@ -36,7 +36,9 @@ To retrieve the list of stored songs point your browser to [localhost:9000](http
 To insert another song you have to POST some json, here's how to do this with curl:
 
 ```sh
-$ curl -v -X POST -H "Content-Type: application/json" -d '{"title":"The Unforgiven","album":"Black Album","artist":"Metallica"}' http://localhost:9000
+$ curl -v -X POST -H "Content-Type: application/json" \
+  -d '{"title":"The Unforgiven","album":"Black Album","artist":"Metallica"}' \
+  http://localhost:9000
 ```
 
 You should get 201/Created as response status and a `Location` header that tells you which resource was created for the new Song.
