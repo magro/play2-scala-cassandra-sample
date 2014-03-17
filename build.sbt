@@ -3,9 +3,8 @@ name := "play2-scala-cassandra-sample"
 version := "1.0-SNAPSHOT"
 
 libraryDependencies ++= Seq(
-  jdbc,
-  anorm,
-  cache
+  cache,
+  "com.datastax.cassandra" % "cassandra-driver-core" % "2.0.1"
 )     
 
 play.Project.playScalaSettings
