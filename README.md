@@ -15,6 +15,7 @@ The Vagrantfile uses the `precise32` image, which you have to download once:
 
 ```sh
 $ vagrant box add precise32 http://files.vagrantup.com/precise32.box
+```
 
 After that you can boot the vagrant box that will install Cassandra on its first start.
 
