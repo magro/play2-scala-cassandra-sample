@@ -6,34 +6,33 @@ import com.datastax.driver.core.ResultSetFuture
 import com.datastax.driver.core.Session
 import scala.collection.JavaConversions._
 import play.api.Logger
+import com.datastax.driver.core.Metadata
+
+
 
 /**
  * Simple cassandra client, following the datastax documentation
  * (http://www.datastax.com/documentation/developer/java-driver/2.0/java-driver/quick_start/qsSimpleClientCreate_t.html).
  */
-class SimpleClient {
+class SimpleClient(node: String) {
 
-  var cluster: Cluster = _
-  var session: Session = _
+  private val cluster = Cluster.builder().addContactPoint(node).build()
+  log(cluster.getMetadata())
+  val session = cluster.connect()
 
-  def connect(node: String) {
-    cluster = Cluster.builder()
-      .addContactPoint(node)
-      .build()
-    val metadata = cluster.getMetadata()
+  private def log(metadata: Metadata): Unit = {
     Logger.info(s"Connected to cluster: ${metadata.getClusterName}")
     for (host <- metadata.getAllHosts()) {
       Logger.info(s"Datatacenter: ${host.getDatacenter()}; Host: ${host.getAddress()}; Rack: ${host.getRack()}")
     }
-    session = cluster.connect()
   }
 
   def createSchema(): Unit = {
-    session.execute("CREATE KEYSPACE simplex WITH replication = {'class':'SimpleStrategy', 'replication_factor':3};")
+    session.execute("CREATE KEYSPACE IF NOT EXISTS simplex WITH replication = {'class':'SimpleStrategy', 'replication_factor':3};")
 
     //Execute statements to create two new tables, songs and playlists. Add to the createSchema method:
     session.execute(
-      """CREATE TABLE simplex.songs (
+      """CREATE TABLE IF NOT EXISTS simplex.songs (
         id uuid PRIMARY KEY,
         title text,
         album text,
@@ -42,7 +41,7 @@ class SimpleClient {
         data blob
         );""")
     session.execute(
-      """CREATE TABLE simplex.playlists (
+      """CREATE TABLE IF NOT EXISTS simplex.playlists (
         id uuid,
         title text,
         album text, 
@@ -83,6 +82,10 @@ class SimpleClient {
     }
   }
 
+  def countFrom(table: String): Long = {
+    session.execute(s"select count(*) from simplex.$table").one.getLong(0)
+  }
+
   def dropSchema() = {
     session.execute("DROP KEYSPACE simplex")
   }
@@ -100,11 +103,11 @@ class SimpleClient {
 }
 
 object Cassandra extends App {
-  val client = new SimpleClient()
-  client.connect("192.168.33.11")
+  val client = new SimpleClient("192.168.33.11")
   client.createSchema
   client.loadData
   client.querySchema
-  client.dropSchema
+  println("Count: " + client.countFrom("songs"))
+  // client.dropSchema
   client.close
 }
