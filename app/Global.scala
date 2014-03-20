@@ -1,19 +1,18 @@
-import play.api.GlobalSettings
-import play.api.Application
 import models.SimpleClient
 import models.SongsRepository
+import pillar.Pillar
+import play.api.Application
+import play.api.GlobalSettings
 
 object Global extends GlobalSettings {
   
   private var cassandra: SimpleClient = _
   private var controller: controllers.Application = _
-  
-  override def onStart(app: Application) {
-    cassandra = new SimpleClient(app.configuration.getString("cassandra.node").getOrElse(throw new IllegalArgumentException("No 'cassandra.node' config found.")))
-    cassandra.createSchema
-    if(cassandra.countFrom("songs") == 0)
-      cassandra.loadData
 
+  override def onStart(app: Application) {
+    Pillar.migrate("faker", app)
+    cassandra = new SimpleClient(app.configuration.getString("cassandra.node")
+      .getOrElse(throw new IllegalArgumentException("No 'cassandra.node' config found.")))
     controller = new controllers.Application(new SongsRepository(cassandra))
   }
 
